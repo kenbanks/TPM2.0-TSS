@@ -11,52 +11,36 @@
 1.	To test it the following python script can be used.  
 NOTE: you may have to cut and paste these commands into Python interpreter one by one.  I'm not a python expert, and I couldn't get the script to just run:
 
-        import os
+from socket import socket, AF_INET, SOCK_STREAM
 
-        import sys
+platformSock = socket(AF_INET, SOCK_STREAM)
+platformSock.connect(('localhost', 2322))
+platformSock.send('\0\0\0\1')
+tpmSock = socket(AF_INET, SOCK_STREAM)
+tpmSock.connect(('localhost', 2321))
 
-        import socket 
+# Send TPM_SEND_COMMAND
+tpmSock.send('\x00\x00\x00\x08')
 
-        from socket import socket, AF_INET, SOCK_STREAM
+# Send locality
+tpmSock.send('\x03')
 
-        platformSock = socket(AF_INET, SOCK_STREAM)
+# Send # of bytes
+tpmSock.send('\x00\x00\x00\x0c')
 
-        platformSock.connect(('localhost', 2322))
+# Send tag
+tpmSock.send('\x80\x01')
 
-        platformSock.send('\0\0\0\1')
+# Send command size
+tpmSock.send('\x00\x00\x00\x0c')
 
-        tpmSock = socket(AF_INET, SOCK_STREAM)
+# Send command code:  TPMStartup
+tpmSock.send('\x00\x00\x01\x44')
 
-        tpmSock.connect(('localhost', 2321))
+# Send TPM SU
+tpmSock.send('\x00\x00')
 
-        \# Send TPM_SEND_COMMAND 
-
-        tpmSock.send('\x00\x00\x00\x08')
-
-        \# Send locality
-
-        tpmSock.send('\x03')
-
-        \# Send # of bytes
-
-        tpmSock.send('\x00\x00\x00\x0c')
-
-        \# Send tag
-
-        tpmSock.send('\x80\x01')
-
-        \# Send command size
-
-        tpmSock.send('\x00\x00\x00\x0c')
-
-        \# Send command code:  TPMStartup
-
-        tpmSock.send('\x00\x00\x01\x44')
-
-        \# Send TPM SU
-
-        tpmSock.send('\x00\x00')
-
-        \# Receive 4  bytes of 0's 
-
-        reply=tpmSock.recv(18)
+# Receive 4  bytes of 0's
+reply=tpmSock.recv(18)
+print repr( reply )
+tpmSock.close()
